@@ -341,3 +341,37 @@ func ResponseFunc(rchans <-chan <-chan Response, done *sync.WaitGroup) {
 		}
 	}
 }
+
+func TestMessageBody(t *testing.T) {
+	var m MessageBody
+	i := struct {
+		Ii int
+		Pp string
+	}{
+		Ii: 3,
+		Pp: "pppp",
+	}
+
+	err := m.AsJSON(&i)
+
+	if err != nil {
+		log.Printf("error %+v", err)
+		t.Fail()
+	}
+
+	var iii struct {
+		Ii int
+		Pp string
+	}
+
+	err = m.FromJSONInto(&iii)
+	if err != nil {
+		log.Printf("error %+v", err)
+		t.Fail()
+	}
+
+	if i.Ii != iii.Ii || i.Pp != iii.Pp {
+		log.Printf("error input %+v not matching output %+v", i, iii)
+		t.Fail()
+	}
+}

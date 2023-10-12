@@ -54,6 +54,17 @@ func (m MessageBody) GetID() uuid.UUID {
 	return m.id
 }
 
+func (m *MessageBody) AsJSON(object interface{}) error {
+	ba, err := json.Marshal(object)
+	if err == nil {
+		m.Message = Message(ba)
+	}
+	return err
+}
+func (m MessageBody) FromJSONInto(object interface{}) error {
+	return json.Unmarshal([]byte(m.Message), object)
+}
+
 type Response struct {
 	MessageBody
 }

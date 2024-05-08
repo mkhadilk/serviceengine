@@ -240,7 +240,7 @@ func TestMongoPublicSubscribe(t *testing.T) {
 
 	lst[0].Request.FromJSONInto(&body2)
 
-	log.Printf("Notification \nSent %+v\nReveiced %+v", body, body2)
+	log.Printf("Notification \nSent %+v\nReceived %+v", body, body2)
 
 	if body.Data != body2.Data {
 		log.Printf("Error wrong message Data for ID %s; expected %s; actual %s", re.GetID().String(), body.Data, body2.Data)

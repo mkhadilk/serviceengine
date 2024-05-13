@@ -115,6 +115,101 @@ func TestMongoMessageFetchSelective(t *testing.T) {
 
 	col.Drop(nil)
 }
+
+func TestMongoMessageUpdateSelective(t *testing.T) {
+
+	col := getCollection("notifications")
+	if col == nil {
+		log.Println("Save failed; can not get collection")
+		t.FailNow()
+	}
+	re := se.NewRequest("extid")
+	body := struct{ Data string }{
+		Data: "testdata",
+	}
+	re.AsJSON(body)
+	m := NewMongoRequest(*re)
+	m.Status = MongoStatusNew
+
+	err := m.Update(col)
+
+	if err != nil {
+		log.Printf("Insert/Update failed %+v", err)
+		col.Database().Client().Disconnect(nil)
+		t.FailNow()
+	}
+
+	log.Printf("Fetching %+v", *m)
+
+	reqs, err := Fetch(col, m.ID, "", "", MongoStatusAny)
+	if err != nil {
+		log.Printf("Fetch failed %+v", err)
+		col.Database().Client().Disconnect(nil)
+		t.FailNow()
+	}
+
+	log.Printf("Records found %+v", reqs)
+
+	if len(reqs) != 1 || reqs[0].ID != m.ID || reqs[0].ExternalID != m.ExternalID || bytes.Compare(reqs[0].Request.Message, m.Request.Message) != 0 {
+		log.Printf("Fetch failed %+v is not same as %+v", reqs, *m)
+		t.FailNow()
+	}
+
+	reqs[0].Request.Message = se.Message("an update")
+
+	err = reqs[0].Update(col)
+
+	if err != nil {
+		log.Printf("Update failed %+v", err)
+		col.Database().Client().Disconnect(nil)
+		t.FailNow()
+	}
+
+	col.Drop(nil)
+}
+
+func TestMongoMessageFetchSelectiveExtID(t *testing.T) {
+
+	col := getCollection("notifications")
+	if col == nil {
+		log.Println("Save failed; can not get collection")
+		t.FailNow()
+	}
+	re := se.NewRequest("extid")
+	body := struct{ Data string }{
+		Data: "testdata",
+	}
+	re.AsJSON(body)
+	m := NewMongoRequest(*re)
+	m.Status = MongoStatusNew
+
+	err := m.Update(col)
+
+	if err != nil {
+		log.Printf("Insert/Update failed %+v", err)
+		col.Database().Client().Disconnect(nil)
+		t.FailNow()
+	}
+
+	log.Printf("Fetching %+v", *m)
+
+	reqs, err := Fetch(col, "", re.ExternalID, "", MongoStatusAny)
+	if err != nil {
+		log.Printf("Fetch failed %+v", err)
+		col.Database().Client().Disconnect(nil)
+		t.FailNow()
+	}
+
+	log.Printf("Records found %+v", reqs)
+
+	if len(reqs) != 1 || reqs[0].ID != m.ID || reqs[0].ExternalID != m.ExternalID || bytes.Compare(reqs[0].Request.Message, m.Request.Message) != 0 {
+		log.Printf("Fetch failed %+v is not same as %+v", reqs, *m)
+		t.FailNow()
+	}
+
+	col.Drop(nil)
+}
+
 func TestMongoMessageDeleteSelective(t *testing.T) {
 
 	col := getCollection("notifications")

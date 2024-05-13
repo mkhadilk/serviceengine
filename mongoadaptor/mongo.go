@@ -82,15 +82,11 @@ func (m *MongoRequest) Update(cl *mongo.Collection) error {
 	u := new(options.UpdateOptions)
 	update := bson.M{"$set": *m}
 	ur, err := cl.UpdateByID(nil, m.ID, update, u.SetUpsert(true))
-	if err != nil || ur.UpsertedCount != 0 {
-		if err == nil {
-			return nil
-		} else {
-			return err
-		}
-	} else {
-		return errors.Join(errors.New("Can not insert or save!"), err)
+	if err != nil || (ur.UpsertedCount == 0 && ur.MatchedCount == 0 && ur.ModifiedCount == 0) {
+		log.Printf("Upsert failed %+v upsert %+v", err, ur)
+		return errors.New("Can not insert or save!")
 	}
+	return nil
 }
 
 // Pass any string as "" for id, externalid, topic to be ignored for filter and status as MongoStatusAny to ignore

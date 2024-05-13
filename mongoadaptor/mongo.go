@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"log"
+	"time"
 
 	"github.com/google/uuid"
 
@@ -29,6 +30,8 @@ type MongoRequest struct {
 	Request    se.Request  `json:"request"`
 	Topic      string      `json:"topic" bson:"topic"` //optional
 	Status     MongoStatus `json:"mongostatus" bson:"mongostatus"`
+	Created    time.Time   `json:"created" bson:"created"`
+	Updated    time.Time   `json:"updated" bson:"updated"`
 }
 
 func NewMongoRequest(req se.Request) *MongoRequest {
@@ -37,6 +40,8 @@ func NewMongoRequest(req se.Request) *MongoRequest {
 	me.ExternalID = req.ExternalID
 	me.Request = req
 	me.Status = MongoStatusNew
+	me.Created = time.Now()
+	me.Updated = time.Now()
 	return me
 }
 
@@ -45,6 +50,7 @@ func (m *MongoRequest) Save(cl *mongo.Collection) error {
 	if cl == nil {
 		return errors.New("Collection is not initilized...")
 	}
+	m.Updated = time.Now()
 	io, err := cl.InsertOne(nil, m)
 	if err != nil {
 		return err
@@ -79,6 +85,7 @@ func (m *MongoRequest) Delete(cl *mongo.Collection) error {
 
 // This will update or insert based on if the id exists or not
 func (m *MongoRequest) Update(cl *mongo.Collection) error {
+	m.Updated = time.Now()
 	u := new(options.UpdateOptions)
 	update := bson.M{"$set": *m}
 	ur, err := cl.UpdateByID(nil, m.ID, update, u.SetUpsert(true))

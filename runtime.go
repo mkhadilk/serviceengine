@@ -13,6 +13,7 @@ import (
 
 type Engine interface {
 	Execute(topic string, request Request) error
+	ExecuteWith(topic string, request Request, timeout time.Duration) error
 	AddConsumer(topic string, listener Consumer)
 	RemoveConsumer(topic string, consunerid uuid.UUID) bool
 	HasConsumers(topic string) bool
@@ -57,6 +58,24 @@ func (e *engine) Execute(topic string, request Request) error {
 	if ok {
 		rchan <- request
 		return nil
+	}
+	err := errors.New("No topic with name " + topic)
+	log.Printf("Unlocking and error %+v", err)
+
+	return err
+
+}
+func (e *engine) ExecuteWith(topic string, request Request, timeout time.Duration) error {
+	e.topiclocker.Lock()
+	rchan, ok := e.topicRegistry[topic]
+	e.topiclocker.Unlock()
+	if ok {
+		select {
+		case rchan <- request:
+			return nil
+		case <-time.After(timeout):
+			return errors.New("send timed out")
+		}
 	}
 	err := errors.New("No topic with name " + topic)
 	log.Printf("Unlocking and error %+v", err)

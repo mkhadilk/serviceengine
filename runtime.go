@@ -15,6 +15,7 @@ type Engine interface {
 	Execute(topic string, request Request) error
 	ExecuteWith(topic string, request Request, timeout time.Duration) error
 	AddConsumer(topic string, listener Consumer)
+	AddConsumerBuffered(topic string, listener Consumer, requestbuffersize int)
 	RemoveConsumer(topic string, consunerid uuid.UUID) bool
 	HasConsumers(topic string) bool
 	GetConsumers(topic string) []Consumer
@@ -89,6 +90,25 @@ func (e *engine) AddConsumer(topic string, listener Consumer) {
 
 	if _, ok := e.topicRegistry[topic]; !ok {
 		e.topicRegistry[topic] = make(chan Request, requestBufferSize)
+	}
+	e.setuplistener(listener, e.topicRegistry[topic])
+	consumermap, ok := e.consumerregistry.Load(topic)
+	var amap map[uuid.UUID]Consumer
+	if ok {
+		amap = consumermap.(map[uuid.UUID]Consumer)
+	} else {
+		amap = make(map[uuid.UUID]Consumer)
+	}
+	amap[listener.GetID()] = listener
+	e.consumerregistry.Store(topic, amap)
+}
+
+func (e *engine) AddConsumerBuffered(topic string, listener Consumer, requestbuffersize int) {
+	e.topiclocker.Lock()
+	defer e.topiclocker.Unlock()
+
+	if _, ok := e.topicRegistry[topic]; !ok {
+		e.topicRegistry[topic] = make(chan Request, requestbuffersize)
 	}
 	e.setuplistener(listener, e.topicRegistry[topic])
 	consumermap, ok := e.consumerregistry.Load(topic)

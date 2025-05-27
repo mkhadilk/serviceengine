@@ -4,7 +4,7 @@ Golang based Consumer-Producer Engine
 This library allows the simple in memory way to produce messages to a topic/s and allows the consumers to be set to receive messages, either from a single topic or multiple.
 
 ## Introduction
-Service Engine is a typical Pub/Sub way to request a service, optionally wait for a reponse, write a code to be invoked based on a Request and send results back to the requestor.
+Service Engine is a typical Pub/Sub way to request a service, optionally wait for a response, write a code to be invoked based on a Request and send results back to the requestor.
 
 ENGINE instance is created first time the import of this package happens.
 

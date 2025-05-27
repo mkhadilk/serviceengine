@@ -34,7 +34,7 @@ And now, send the request for execution like:
 ```
 ENGINE.Execute("a newtopic", *nreq)
 ```
-You will notice that the Consumer code will get called and it would reponse to Resonse channel inside the Request object.
+You will notice that the Consumer code will get called and it would response to Response channel inside the Request object.
 
 One can read the response in two ways:
 Just do-
